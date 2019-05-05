@@ -300,7 +300,8 @@ bool CmidPlayer::load(const std::string &filename, const CFileProvider &fp)
     uint32_t size;
 
     f->readString((char *)s, 6);
-    size = *(uint32_t *)s; // size of FILE_OLDLUCAS
+    // need to perform unaligned access
+    memcpy(&size, s, sizeof(uint32_t)); // size of FILE_OLDLUCAS
     good=0;
     subsongs=0;
     switch(s[0])
