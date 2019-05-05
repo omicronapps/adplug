@@ -86,7 +86,12 @@ bool isHSQ(uint8_t * data, int size)
 		#endif
 		return false;
 	}
-	if ( *(uint16_t *)(data + 3) != size )
+
+	// need to perform unaligned access
+	uint16_t temp_size;
+	memcpy(&temp_size, data + 3, sizeof(uint16_t));
+
+	if ( temp_size != size )
 	{
 		#ifdef DEBUG
 		AdPlug_LogWrite("HERAD: Is not HSQ, wrong compressed size.\n");
@@ -148,7 +153,10 @@ uint16_t HSQ_decompress(uint8_t * data, int size, uint8_t * out)
 		// get next bit of the queue
 		if (queue == 1)
 		{
-			queue = *(uint16_t *)src | 0x10000;
+			// need to perform unaligned access
+			uint16_t temp;
+			memcpy(&temp, src, sizeof(uint16_t));
+			queue = temp | 0x10000;
 			src += 2;
 		}
 		bit = queue & 1;
@@ -164,7 +172,10 @@ uint16_t HSQ_decompress(uint8_t * data, int size, uint8_t * out)
 			// get next bit of the queue
 			if (queue == 1)
 			{
-				queue = *(uint16_t *)src | 0x10000;
+				// need to perform unaligned access
+				uint16_t temp;
+				memcpy(&temp, src, sizeof(uint16_t));
+				queue = temp | 0x10000;
 				src += 2;
 			}
 			bit = queue & 1;
@@ -174,7 +185,8 @@ uint16_t HSQ_decompress(uint8_t * data, int size, uint8_t * out)
 			{
 				// count = next 3 bits of the input
 				// offset = next 13 bits of the input minus 8192
-				count = *(uint16_t *)src;
+				// need to perform unaligned access
+				memcpy(&count, src, sizeof(uint16_t));
 				offset = (count >> 3) - 8192;
 				count &= 7;
 				src += 2;
@@ -194,7 +206,10 @@ uint16_t HSQ_decompress(uint8_t * data, int size, uint8_t * out)
 				// count = next bit of the queue * 2 + next bit of the queue
 				if (queue == 1)
 				{
-					queue = *(uint16_t *)src | 0x10000;
+					// need to perform unaligned access
+					uint16_t temp;
+					memcpy(&temp, src, sizeof(uint16_t));
+					queue = temp | 0x10000;
 					src += 2;
 				}
 				bit = queue & 1;
@@ -202,7 +217,10 @@ uint16_t HSQ_decompress(uint8_t * data, int size, uint8_t * out)
 				count = bit << 1;
 				if (queue == 1)
 				{
-					queue = *(uint16_t *)src | 0x10000;
+					// need to perform unaligned access
+					uint16_t temp;
+					memcpy(&temp, src, sizeof(uint16_t));
+					queue = temp | 0x10000;
 					src += 2;
 				}
 				bit = queue & 1;
@@ -243,7 +261,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 		queue >>= 1;
 		if (queue == 0)
 		{
-			queue = *(uint16_t *)src;
+			// need to perform unaligned access
+			memcpy(&queue, src, sizeof(uint16_t));
 			src += 2;
 			bit_p = bit;
 			bit = queue & 1;
@@ -264,7 +283,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 				queue >>= 1;
 				if (queue == 0)
 				{
-					queue = *(uint16_t *)src;
+					// need to perform unaligned access
+					memcpy(&queue, src, sizeof(uint16_t));
 					src += 2;
 					bit_p = bit;
 					bit = queue & 1;
@@ -282,7 +302,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 					queue >>= 1;
 					if (queue == 0)
 					{
-						queue = *(uint16_t *)src;
+						// need to perform unaligned access
+						memcpy(&queue, src, sizeof(uint16_t));
 						src += 2;
 						bit_p = bit;
 						bit = queue & 1;
@@ -303,7 +324,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 				}
 				break;
 			case 2:
-				count = *(uint16_t *)src;
+				// need to perform unaligned access
+				memcpy(&count, src, sizeof(uint16_t));
 				offset = (count >> data[5]) - (1 << (16 - data[5]));
 				count &= (1 << data[5]) - 1;
 				src += 2;
@@ -335,7 +357,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 			queue >>= 1;
 			if (queue == 0)
 			{
-				queue = *(uint16_t *)src;
+				// need to perform unaligned access
+				memcpy(&queue, src, sizeof(uint16_t));
 				src += 2;
 				bit_p = bit;
 				bit = queue & 1;
@@ -356,7 +379,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 					queue >>= 1;
 					if (queue == 0)
 					{
-						queue = *(uint16_t *)src;
+						// need to perform unaligned access
+						memcpy(&queue, src, sizeof(uint16_t));
 						src += 2;
 						bit_p = bit;
 						bit = queue & 1;
@@ -374,7 +398,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 						queue >>= 1;
 						if (queue == 0)
 						{
-							queue = *(uint16_t *)src;
+							// need to perform unaligned access
+							memcpy(&queue, src, sizeof(uint16_t));
 							src += 2;
 							bit_p = bit;
 							bit = queue & 1;
@@ -395,7 +420,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 					}
 					break;
 				case 2:
-					count = *(uint16_t *)src;
+					// need to perform unaligned access
+					memcpy(&count, src, sizeof(uint16_t));
 					offset = (count >> data[5]) - (1 << (16 - data[5]));
 					count &= (1 << data[5]) - 1;
 					src += 2;
@@ -434,7 +460,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 					queue >>= 1;
 					if (queue == 0)
 					{
-						queue = *(uint16_t *)src;
+						// need to perform unaligned access
+						memcpy(&queue, src, sizeof(uint16_t));
 						src += 2;
 						bit_p = bit;
 						bit = queue & 1;
@@ -452,7 +479,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 						queue >>= 1;
 						if (queue == 0)
 						{
-							queue = *(uint16_t *)src;
+							// need to perform unaligned access
+							memcpy(&queue, src, sizeof(uint16_t));
 							src += 2;
 							bit_p = bit;
 							bit = queue & 1;
@@ -473,7 +501,8 @@ uint16_t SQX_decompress(uint8_t * data, int size, uint8_t * out)
 					}
 					break;
 				case 2:
-					count = *(uint16_t *)src;
+					// need to perform unaligned access
+					memcpy(&count, src, sizeof(uint16_t));
 					offset = (count >> data[5]) - (1 << (16 - data[5]));
 					count &= (1 << data[5]) - 1;
 					src += 2;
