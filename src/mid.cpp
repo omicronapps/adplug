@@ -75,12 +75,14 @@
  *  SD - the SCI Decoder (to get all .sci out of the Sierra files)
  */
 
+#include "strnlen.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include "mid.h"
 #include "mididata.h"
+#include "load_helper.h"
 
 /*#define TESTING*/
 #ifdef TESTING
@@ -174,17 +176,13 @@ unsigned long CmidPlayer::getnext(unsigned long num)
 
 unsigned long CmidPlayer::getval()
 {
-    int v=0;
-	unsigned char b;
+	unsigned long b, v = 0;
 
-    b=(unsigned char)getnext(1);
-	v=b&0x7f;
-	while ((b&0x80) !=0)
-		{
-        b=(unsigned char)getnext(1);
-        v = (v << 7) + (b & 0x7F);
-		}
-	return(v);
+	do {
+		b = getnext(1);
+		v = (v << 7) + (b & 0x7f);
+	} while (b & 0x80);
+	return v & 0x0fffffff; // limit value to allowed range
 }
 
 bool CmidPlayer::load_sierra_ins(const std::string &fname, const CFileProvider &fp)
@@ -202,7 +200,9 @@ bool CmidPlayer::load_sierra_ins(const std::string &fname, const CFileProvider &
 	j = i+1;
 	break;
       }
-    sprintf(pfilename+j+3,"patch.003");
+    for (i = 0; i < 3; i++)
+      if (pfilename[j]) j++;
+    sprintf(pfilename+j,"patch.003");
 
     f = fp.open(pfilename);
     free(pfilename);
@@ -300,7 +300,7 @@ bool CmidPlayer::load(const std::string &filename, const CFileProvider &fp)
     uint32_t size;
 
     f->readString((char *)s, 6);
-    size = *(uint32_t *)s; // size of FILE_OLDLUCAS
+    size = u32_unaligned(s); // size of FILE_OLDLUCAS
     good=0;
     subsongs=0;
     switch(s[0])
@@ -433,6 +433,7 @@ void CmidPlayer::midi_fm_volume(int voice, int volume)
 
 void CmidPlayer::midi_fm_playnote(int voice, int note, int volume)
 {
+    if (note < 0) return; // prevent invalid access
     int freq=fnums[note%12];
     int oct=note/12;
 	int c;
@@ -662,7 +663,7 @@ midi_fm_playnote(i,note+cnote[c],my_midi_fm_vol_table[(cvols[c]*vel)/128]*2);
                 break;
             case 0xc0: /*patch change*/
 	      x=getnext(1);
-	      ch[c].inum=x;
+	      ch[c].inum = x & 0x7f;
 	      for (j=0; j<11; j++)
 		ch[c].ins[j]=myinsbank[ch[c].inum][j];
 	      break;
@@ -697,24 +698,34 @@ midi_fm_playnote(i,note+cnote[c],my_midi_fm_vol_table[(cvols[c]*vel)/128]*2);
                             midiprintf ("\n");
                             getnext(1);
                             getnext(1);
-							c=getnext(1);
+                            c = getnext(1) & 0x0f;
 							getnext(1);
 
                           //  getnext(22); //temp
-                            ch[c].ins[0]=(unsigned char)((getnext(1)<<4)+getnext(1));
-                            ch[c].ins[2]=(unsigned char)(0xff-(((getnext(1)<<4)+getnext(1))&0x3f));
-                            ch[c].ins[4]=(unsigned char)(0xff-((getnext(1)<<4)+getnext(1)));
-                            ch[c].ins[6]=(unsigned char)(0xff-((getnext(1)<<4)+getnext(1)));
-                            ch[c].ins[8]=(unsigned char)((getnext(1)<<4)+getnext(1));
+                            unsigned char tmp;
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[0] = tmp + getnext(1);
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[2] = 0xff - ((tmp + getnext(1)) & 0x3f);
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[4] = 0xff - (tmp + getnext(1));
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[6] = 0xff-(tmp + getnext(1));
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[8] = tmp + getnext(1);
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[1] = tmp + getnext(1);
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[3] = 0xff - ((tmp + getnext(1)) & 0x3f);
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[5] = 0xff - (tmp + getnext(1));
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[7] = 0xff - (tmp + getnext(1));
+                            tmp = getnext(1) << 4;
+                            ch[c].ins[9] = tmp + getnext(1);
 
-                            ch[c].ins[1]=(unsigned char)((getnext(1)<<4)+getnext(1));
-                            ch[c].ins[3]=(unsigned char)(0xff-(((getnext(1)<<4)+getnext(1))&0x3f));
-                            ch[c].ins[5]=(unsigned char)(0xff-((getnext(1)<<4)+getnext(1)));
-                            ch[c].ins[7]=(unsigned char)(0xff-((getnext(1)<<4)+getnext(1)));
-                            ch[c].ins[9]=(unsigned char)((getnext(1)<<4)+getnext(1));
-
-                            i=(getnext(1)<<4)+getnext(1);
-                            ch[c].ins[10]=i;
+                            i = getnext(1) << 4;
+                            ch[c].ins[10] = (i += getnext(1));
 
                             //if ((i&1)==1) ch[c].ins[10]=1;
 
@@ -819,7 +830,7 @@ midi_fm_playnote(i,note+cnote[c],my_midi_fm_vol_table[(cvols[c]*vel)/128]*2);
 
         if (ret==1)
             {
-            iwait=0xffffff;  // bigger than any wait can be!
+            iwait = ~0UL;  // bigger than any wait can be!
             for (curtrack=0; curtrack<16; curtrack++)
                if (track[curtrack].on == 1 &&
                    track[curtrack].pos < track[curtrack].tend &&
@@ -884,7 +895,7 @@ void CmidPlayer::rewind(int subsong)
     for (i=0; i<128; i++)
         for (j=0; j<14; j++)
             myinsbank[i][j]=midi_fm_instruments[i][j];
-	for (i=0; i<16; i++)
+    for (i=0; i<16; i++)
         {
         ch[i].inum=0;
         for (j=0; j<11; j++)
@@ -940,8 +951,11 @@ void CmidPlayer::rewind(int subsong)
                 curtrack=0;
                 track[curtrack].on=1;
                 track[curtrack].tend=getnext(4);
-                track[curtrack].spos=pos;
                 midiprintf ("tracklen:%lu\n",track[curtrack].tend);
+                //track[curtrack].tend += pos; // FIXME: length -> end position
+                if (track[curtrack].tend > flen) // no music after end of file
+                    track[curtrack].tend = flen;
+                track[curtrack].spos=pos;
                 break;
             case FILE_CMF:
                 getnext(3);  // ctmf
@@ -949,15 +963,21 @@ void CmidPlayer::rewind(int subsong)
                 n=getnexti(2); // instrument offset
                 m=getnexti(2); // music offset
                 deltas=getnexti(2); //ticks/qtr note
-                msqtr=1000000/getnexti(2)*deltas;
-                   //the stuff in the cmf is click ticks per second..
+                i = getnexti(2); // stuff in cmf is click ticks per second..
+                if (i) msqtr = 1000000L / i * deltas;
 
                 i=getnexti(2);
-				if(i) title = (char *)data+i;
+                if (i > 0 && i < flen &&
+                    strnlen((char *)data + i, flen - i) < flen - i)
+                  title = (char *)data + i;
                 i=getnexti(2);
-				if(i) author = (char *)data+i;
+                if (i > 0 && i < flen &&
+                    strnlen((char *)data + i, flen - i) < flen - i)
+                  author = (char *)data + i;
                 i=getnexti(2);
-				if(i) remarks = (char *)data+i;
+                if (i > 0 && i < flen &&
+                    strnlen((char *)data + i, flen - i) < flen - i)
+                  remarks = (char *)data + i;
 
                 getnext(16); // channel in use table ..
                 i=getnexti(2); // num instr
@@ -1076,7 +1096,7 @@ void CmidPlayer::rewind(int subsong)
                     {
                     ch[i].nshift=-13;
                     ch[i].on=getnext(1);
-                    ch[i].inum=getnext(1);
+                    ch[i].inum = getnext(1) & 0x7f;
                     for (j=0; j<11; j++)
                         ch[i].ins[j]=myinsbank[ch[i].inum][j];
                     }

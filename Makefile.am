@@ -61,7 +61,7 @@ src_libadplug_la_SOURCES = \
 	src/players.cpp \
 	src/protrack.cpp \
 	src/psi.cpp \
-	src/rad.cpp \
+	src/rad2.cpp \
 	src/rat.cpp \
 	src/raw.cpp \
 	src/realopl.cpp \
@@ -110,7 +110,7 @@ pkginclude_HEADERS = \
 	src/mkj.h \
 	src/mtk.h \
 	src/protrack.h \
-	src/rad.h \
+	src/rad2.h \
 	src/raw.h \
 	src/s3m.h \
 	src/sa2.h \
@@ -160,7 +160,9 @@ pkginclude_HEADERS = \
 	src/cmfmcsop.h \
 	src/vgm.h \
 	src/sop.h \
-	src/herad.h
+	src/herad.h \
+	src/strnlen.h \
+	src/load_helper.h
 
 #############
 # adplugdb/ #
@@ -228,19 +230,23 @@ doc/adplugdb.1: $(top_srcdir)/doc/adplugdb.1.in
 check_PROGRAMS = \
 	test/playertest \
 	test/emutest \
-	test/crctest
+	test/crctest \
+	test/stresstest
 
 test_playertest_SOURCES = test/playertest.cpp
 test_emutest_SOURCES = test/emutest.cpp
 test_crctest_SOURCES = test/crctest.cpp
+test_stresstest_SOURCES = test/stresstest.cpp
 
 test_playertest_CPPFLAGS = $(libbinio_CFLAGS)
 test_emutest_CPPFLAGS = $(libbinio_CFLAGS)
 test_crctest_CPPFLAGS = $(libbinio_CFLAGS)
+test_stresstest_CPPFLAGS = $(libbinio_CFLAGS)
 
 test_playertest_LDADD = src/libadplug.la $(libbinio_LIBS)
 test_emutest_LDADD = src/libadplug.la $(libbinio_LIBS)
 test_crctest_LDADD = src/libadplug.la $(libbinio_LIBS)
+test_stresstest_LDADD = src/libadplug.la $(libbinio_LIBS)
 
 AM_TESTS_ENVIRONMENT = testdir='$(srcdir)/test'; export testdir;
 TESTS = $(check_PROGRAMS)
@@ -388,3 +394,147 @@ EXTRA_DIST += \
 	test/WORMINTR.ref \
 	test/YsBattle.ref \
 	test/YsBattle.vgm
+# Regression tests:
+EXTRA_DIST += \
+	test/i-85.bmf \
+	test/i-86.dtm \
+	test/i-87.mkj \
+	test/i-88_1.a2m test/i-88_2.a2m \
+	test/i-89_1.rad test/i-89_2.rad \
+	test/i-90_1.mtk test/i-90_2.mtk \
+	test/i-91.m \
+	test/i-92_1.m test/i-92_2.m test/i-92_3.m test/i-92_4.m \
+	test/i-93_01.bmf test/i-93_02.bmf test/i-93_03.xad test/i-93_04.bmf \
+	test/i-93_05.xad test/i-93_06.xad test/i-93_07.bmf test/i-93_08.xad \
+	test/i-93_09.xad test/i-93_10.xad test/i-93_11.xad test/i-93_12.xad \
+	test/i-93_13.xad test/i-93_14.xad test/i-93_15.bmf test/i-93_16.xad \
+	test/i-93_17.xad test/i-93_18.xad \
+	test/i-94.rix \
+	test/i-95_1.ctm test/i-95_2.ctm \
+	test/i-96_1.rol	test/i-96_2.rol	test/i-96_3.rol \
+	test/i-98.sng \
+	test/i-99.dro \
+	test/i-100_01.xad test/i-100_02.xad test/i-100_03.dro \
+	test/i-100_04.dro test/i-100_05.raw test/i-100_06.raw \
+	test/i-100_07.dro test/i-100_08.dro test/i-100_09.adlib \
+	test/i-100_10.mkj test/i-100_11.mkj test/i-100_12.cmf \
+	test/i-100_13.cmf \
+	test/i-101_1.d00 test/i-101_2.d00 \
+	test/i-102_001.dfm test/i-102_002.dfm test/i-102_003.dfm \
+	test/i-102_004.dfm test/i-102_005.dfm test/i-102_006.dfm \
+	test/i-102_007.dfm test/i-102_008.dfm test/i-102_009.dfm \
+	test/i-102_010.dfm test/i-102_011.dfm test/i-102_012.dfm \
+	test/i-102_013.dfm test/i-102_014.dfm test/i-102_015.dfm \
+	test/i-102_016.dfm test/i-102_017.dfm test/i-102_018.dfm \
+	test/i-102_019.dfm test/i-102_020.dfm test/i-102_021.dfm \
+	test/i-102_022.dfm test/i-102_023.dfm test/i-102_024.dfm \
+	test/i-102_025.dfm test/i-102_026.dfm test/i-102_027.dfm \
+	test/i-102_028.dfm test/i-102_029.dfm test/i-102_030.dfm \
+	test/i-102_031.dfm test/i-102_032.dfm test/i-102_033.dfm \
+	test/i-102_034.dfm test/i-102_035.dfm test/i-102_036.dfm \
+	test/i-102_037.dfm test/i-102_038.dfm test/i-102_039.dfm \
+	test/i-102_040.dfm test/i-102_041.dfm test/i-102_042.dfm \
+	test/i-102_043.dfm test/i-102_044.dfm test/i-102_045.dfm \
+	test/i-102_046.dfm test/i-102_047.dfm test/i-102_048.dfm \
+	test/i-102_049.dfm test/i-102_050.dfm test/i-102_051.dfm \
+	test/i-102_052.dfm test/i-102_053.dfm test/i-102_054.dfm \
+	test/i-102_055.dfm test/i-102_056.dfm test/i-102_057.dfm \
+	test/i-102_058.dfm test/i-102_059.dfm test/i-102_060.dfm \
+	test/i-102_061.dfm test/i-102_062.dfm test/i-102_063.dfm \
+	test/i-102_064.dfm test/i-102_065.dfm test/i-102_066.dfm \
+	test/i-102_067.dfm test/i-102_068.dfm test/i-102_069.dfm \
+	test/i-102_070.dfm test/i-102_071.dfm test/i-102_072.dfm \
+	test/i-102_073.dfm test/i-102_074.dfm test/i-102_075.dfm \
+	test/i-102_076.dfm test/i-102_077.dfm test/i-102_078.dfm \
+	test/i-102_079.dfm test/i-102_080.dfm test/i-102_081.dfm \
+	test/i-102_082.dfm test/i-102_083.dfm test/i-102_084.dfm \
+	test/i-102_085.dfm test/i-102_086.dfm test/i-102_087.dfm \
+	test/i-102_088.dfm test/i-102_089.dfm test/i-102_090.dfm \
+	test/i-102_091.dfm test/i-102_092.dfm test/i-102_093.dfm \
+	test/i-102_094.dfm test/i-102_095.dfm test/i-102_096.dfm \
+	test/i-102_097.dfm test/i-102_098.dfm test/i-102_099.dfm \
+	test/i-102_100.dfm test/i-102_101.dfm test/i-102_102.dfm \
+	test/i-102_103.dfm test/i-102_104.dfm test/i-102_105.dfm \
+	test/i-102_106.dfm test/i-102_107.dfm test/i-102_108.dfm \
+	test/i-102_109.dfm test/i-102_110.dfm test/i-102_111.dfm \
+	test/i-102_112.dfm test/i-102_113.dfm test/i-102_114.dfm \
+	test/i-102_115.dfm test/i-102_116.dfm test/i-102_117.dfm \
+	test/i-102_118.dfm test/i-102_119.dfm test/i-102_120.dfm \
+	test/i-102_121.dfm test/i-102_122.dfm test/i-102_123.dfm \
+	test/i-102_124.dfm test/i-102_125.dfm test/i-102_126.dfm \
+	test/i-102_127.dfm test/i-102_128.dfm test/i-102_129.dfm \
+	test/i-102_130.dfm test/i-102_131.dfm test/i-102_132.dfm \
+	test/i-102_133.dfm test/i-102_134.dfm test/i-102_135.dfm \
+	test/i-102_136.dfm test/i-102_137.dfm test/i-102_138.dfm \
+	test/i-102_139.dfm test/i-102_140.dfm test/i-102_141.dfm \
+	test/i-102_142.dfm test/i-102_143.dfm test/i-102_144.dfm \
+	test/i-102_145.dfm test/i-102_146.dfm test/i-102_147.dfm \
+	test/i-102_148.dfm test/i-102_149.dfm test/i-102_150.dfm \
+	test/i-102_151.dfm \
+	test/i-110_001.dtm test/i-110_002.dtm test/i-110_003.dtm \
+	test/i-110_004.dtm test/i-110_005.a2m test/i-110_006.a2m \
+	test/i-110_007.a2m test/i-110_008.a2m test/i-110_009.a2m \
+	test/i-110_010.a2m test/i-110_011.a2m test/i-110_012.cff \
+	test/i-110_013.cff test/i-110_014.cff test/i-110_015.cff \
+	test/i-110_016.cff test/i-110_017.cff test/i-110_018.cff \
+	test/i-110_019.cff test/i-110_020.cff test/i-110_021.cff \
+	test/i-110_022.cff test/i-110_023.cff test/i-110_024.cff \
+	test/i-110_025.amd test/i-110_026.amd test/i-110_027.amd \
+	test/i-110_028.amd test/i-110_029.amd test/i-110_030.xad \
+	test/i-110_031.dtm test/i-110_032.dtm test/i-110_033.amd \
+	test/i-110_034.xad test/i-110_035.xad test/i-110_036.xad \
+	test/i-110_037.xad test/i-110_038.a2m test/i-110_039.dtm \
+	test/i-110_040.dtm test/i-110_041.a2m test/i-110_042.a2m \
+	test/i-110_043.amd test/i-110_044.a2m test/i-110_045.a2m \
+	test/i-110_046.amd test/i-110_047.sng test/i-110_048.cff \
+	test/i-110_049.sa2 test/i-110_050.sa2 test/i-110_051.amd \
+	test/i-110_052.dtm test/i-110_053.dtm test/i-110_054.dtm \
+	test/i-110_055.dtm test/i-110_056.amd test/i-110_057.mtk \
+	test/i-110_058.xad test/i-110_059.dtm test/i-110_060.dtm \
+	test/i-110_061.dtm test/i-110_062.amd test/i-110_063.dtm \
+	test/i-110_064.dtm test/i-110_065.amd test/i-110_066.sng \
+	test/i-110_067.sat test/i-110_068.amd test/i-110_069.amd \
+	test/i-110_070.xad test/i-110_071.amd test/i-110_072.amd \
+	test/i-110_073.a2m test/i-110_074.a2m test/i-110_075.a2m \
+	test/i-110_076.a2m test/i-110_077.a2m test/i-110_078.a2m \
+	test/i-110_079.sng test/i-110_080.sng test/i-110_081.sa2 \
+	test/i-110_082.sa2 test/i-110_083.amd test/i-110_084.amd \
+	test/i-110_085.amd test/i-110_086.amd test/i-110_087.amd \
+	test/i-110_088.amd test/i-110_089.xad test/i-110_090.xad \
+	test/i-110_091.a2m test/i-110_092.cff test/i-110_093.cff \
+	test/i-110_094.mtk test/i-110_095.xad test/i-110_096.xad \
+	test/i-110_097.cff test/i-110_098.amd test/i-110_099.amd \
+	test/i-110_100.dtm test/i-110_101.cff test/i-110_102.cff \
+	test/i-110_103.cff test/i-110_104.amd test/i-110_105.cff \
+	test/i-110_106.sat test/i-110_107.a2m test/i-110_108.a2m \
+	test/i-110_109.amd test/i-110_110.dtm test/i-110_111.dtm \
+	test/i-110_112.dtm test/i-110_113.dtm test/i-110_114.dtm \
+	test/i-110_115.dtm test/i-110_116.dtm test/i-110_117.dtm \
+	test/i-110_118.dtm test/i-110_119.dtm test/i-110_120.dtm \
+	test/i-110_121.dtm test/i-110_122.dtm test/i-110_123.xad \
+	test/i-110_124.a2m test/i-110_125.dtm test/i-110_126.a2m \
+	test/i-110_127.amd test/i-110_128.dtm test/i-110_129.a2m \
+	test/i-110_130.amd test/i-110_131.amd test/i-110_132.a2m \
+	test/i-110_133.dtm test/i-110_134.sat test/i-110_135.amd \
+	test/i-110_136.amd test/i-110_137.a2m test/i-110_138.a2m \
+	test/i-110_139.dtm test/i-110_140.sat test/i-110_141.amd \
+	test/i-110_142.sat test/i-110_143.dtm test/i-110_144.xad \
+	test/i-110_145.amd test/i-110_146.xad test/i-110_147.amd \
+	test/i-110_148.sa2 test/i-110_149.sa2 test/i-110_150.sa2 \
+	test/i-110_151.amd test/i-110_152.amd test/i-110_153.amd \
+	test/i-110_154.amd test/i-110_155.amd test/i-110_156.amd \
+	test/i-110_157.a2m test/i-110_158.amd test/i-110_159.a2m \
+	test/i-110_160.amd test/i-110_161.xad test/i-110_162.sa2 \
+	test/i-110_163.sa2 test/i-110_164.dtm test/i-110_165.dtm \
+	test/i-110_166.dtm test/i-110_167.sa2 test/i-110_168.a2m \
+	test/i-110_169.amd test/i-110_170.a2m test/i-110_171.amd \
+	test/i-110_172.amd test/i-110_173.xad test/i-110_174.amd \
+	test/i-110_175.amd test/i-110_176.dtm test/i-110_177.amd \
+	test/i-110_178.dtm test/i-110_179.dtm test/i-110_180.a2m \
+	test/i-110_181.dtm test/i-110_182.dtm test/i-110_183.a2m \
+	test/i-110_184.dtm test/i-110_185.dtm test/i-110_186.a2m \
+	test/i-110_187.amd test/i-110_188.mtk test/i-110_189.amd \
+	test/i-110_190.amd test/i-110_191.dtm test/i-110_192.a2m \
+	test/i-110_193.amd test/i-110_194.dtm test/i-110_195.dtm \
+	test/i-110_196.a2m test/i-110_197.sa2 test/i-110_198.dtm \
+	test/i-110_199.amd test/i-110_200.a2m

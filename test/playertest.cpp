@@ -41,14 +41,15 @@ static const char *filelist[] = {
   "2001.MKJ",		// MK-Jamz
   "ADAGIO.DFM",		// Digital-FM
   "adlibsp.s3m",	// Scream Tracker 3
-  "ALLOYRUN.RAD",	// Reality AdLib Tracker
+  "ALLOYRUN.RAD",	// Reality AdLib Tracker (v1)
+  "dystopia.rad",   // Reality AdLib Tracker (v2)
+  "canonind.rad",   // Reality AdLib Tracker (v2 + MIDI)
   "ARAB.BAM",		// Bob's AdLib Music
   "BEGIN.KSM",		// Ken Silverman
   "BOOTUP.M",		// Ultima 6
   "CHILD1.XSM",		// eXtra Simple Music
   "DTM-TRK1.DTM",	// DeFy Adlib Tracker
-// Skip TwinTrack as it produces different results each time
-//  "fdance03.dmo",	// TwinTrack
+  "fdance03.dmo",	// TwinTrack
   "ice_thnk.sci",	// Sierra
   "inc.raw",		// RAW
   "crusader.raw",	// RAW (non-standard clock rate)
@@ -81,8 +82,8 @@ static const char *filelist[] = {
   "blaster2.msc",	// AdLib MSCplay
   "RI051.RIX",		// Softstar RIX OPL Music
   "EOBSOUND.ADL",	// Westwood ADL v1
-  "DUNE19.ADL",		// Westwood ADL v2
-  "LOREINTR.ADL",	// Westwood ADL v3
+  "DUNE19.ADL",		// Westwood ADL v3
+  "LOREINTR.ADL",	// Westwood ADL v4
   "DEMO4.JBM",		// JBM Adlib Music
   "dro_v2.dro",         // DOSBox DRO v2.0
   "menu.got",       // God of Thunder Music (at 140 Hz)
